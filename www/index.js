@@ -1,11 +1,5 @@
-async function init(){
-    const response = await fetch("sum.wasm");
-    const buffer = await response.arrayBuffer();
-    const wasm = await WebAssembly.instantiate(buffer);
-  
-    const sumFunction = wasm.instance.exports.sum;
-    const result = sumFunction(10, 20);
-    console.log(result);
-}
+import init, {greet} from 'snake_game';
 
-init();
+init().then(_ => {
+    greet("zura");
+});
