@@ -19,8 +19,8 @@ pub struct World{
 impl World{
     pub fn new() -> World{
         World{
-            width: 16,
-            snake: Snake::new(12)
+            width: 8,
+            snake: Snake::new(2)
         }
     }
 
@@ -30,6 +30,16 @@ impl World{
 
     pub fn snake_head(&self) -> usize{
         self.snake.body[0].0
+    }
+
+    pub fn update(&mut self){
+        let mut index = self.snake_head() + 1;
+
+        if index > self.width * self.width - 1 {
+            index = 0;
+        }
+
+        self.snake.body[0].0 = index;
     }
 }
 
