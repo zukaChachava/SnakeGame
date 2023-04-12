@@ -1,2 +1,2 @@
-import(".index.js")
+import("./index")
     .catch(e => console.error(e));
