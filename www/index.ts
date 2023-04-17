@@ -1,10 +1,10 @@
-import init, {World, Direction} from 'snake_game';
+import init, {World, Direction} from 'snake_game/snake_game';
 
 init().then(_ => {
     const cellSize = 40;
     const width = 8;
     const start_index = Date.now() % (width * width);
-    const speed = 1;
+    const speed = 2;
 
     const world = World.new(width, start_index);
     const worldWidth = world.width();
@@ -32,13 +32,19 @@ init().then(_ => {
     }
 
     function drawSnake(){
-        const head = world.snake_head();
-        const col =  head % world.width();
-        const row = Math.floor(head / world.width());
+        const len = world.snake_len();
 
-        ctx.beginPath();
-        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-        ctx.stroke();
+        
+        for(let i = 0; i< len; i++){
+            ctx.beginPath();
+            const position = world.snake_body_position(i);
+            const col =  position % world.width();
+            const row = Math.floor(position / world.width());
+            const radius = cellSize / 2;
+            ctx.arc(col * cellSize + radius, row * cellSize + radius, radius, 0, Math.PI * 2 * radius);
+            ctx.fill();
+        }
+        
     }
 
     function update(){
