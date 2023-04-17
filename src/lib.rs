@@ -126,8 +126,6 @@ impl Snake{
 
     fn move_right(&mut self, width: usize){
         let mut index = self.get_head();
-        let prev_index = index;
-
         if (index + 1) % width == 0  {
             index = index - (width - 1);
         }
@@ -135,25 +133,23 @@ impl Snake{
             index += 1;
         }
 
+        self.move_body();
         self.body[0].0 = index;
-        self.move_body(prev_index);
     }
 
     fn move_down(&mut self, width: usize){
         let mut index = self.get_head() + width;
-        let prev_index = self.get_head();
 
         if index > width * width - 1 {
             index = index % width;
         }
 
+        self.move_body();
         self.body[0].0 = index;
-        self.move_body(prev_index);
     }
 
     fn move_left(&mut self, width: usize){
         let mut index = self.get_head();
-        let prev_index = index;
 
         if index % width == 0{
             index += width - 1;
@@ -162,13 +158,12 @@ impl Snake{
             index -= 1;
         }
 
+        self.move_body();
         self.body[0].0 = index;
-        self.move_body(prev_index);
     }
 
     fn move_up(&mut self, width: usize){
         let mut index = self.get_head();
-        let prev_index = index;
 
         if index < width {
             index = width * width - width  + index
@@ -177,19 +172,13 @@ impl Snake{
             index -= width;
         }
 
+        self.move_body();
         self.body[0].0 = index;
-        self.move_body(prev_index);
     }
 
-    fn move_body(&mut self, previous_head: usize){
-        if self.body.len() < 2 {
-            return;
-        }
-
-        for i in (2..self.body.len()).rev() {
+    fn move_body(&mut self){
+        for i in (1..self.body.len()).rev() {
             self.body[i].0 = self.body[i-1].0;
         }
-
-        self.body[1].0 = previous_head;
     }
 }
