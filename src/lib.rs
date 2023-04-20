@@ -1,4 +1,5 @@
 use wasm_bindgen::prelude::*;
+use getrandom;
 
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
@@ -10,6 +11,11 @@ pub enum Direction{
     Right,
     Down,
     Left
+}
+
+enum SnakeUpdateState{
+    Grown,
+    Same
 }
 
 #[derive(PartialEq)]
@@ -29,7 +35,18 @@ struct Cell(usize);
 #[wasm_bindgen]
 pub struct World{
     width: usize,
-    snake: Snake
+    snake: Snake,
+    reward_cell: usize
+}
+
+fn get_random(modulo: usize) -> usize{
+    let mut bytes: [u8; 1] = [0];
+    let result = getrandom::getrandom(&mut bytes);
+
+    match result {
+        Result::Ok(_) => bytes[0] as usize / modulo,
+        Result::Err(_) => panic!("Random Error")
+    }
 }
 
 #[wasm_bindgen]
@@ -37,7 +54,8 @@ impl World{
     pub fn new(width: usize, start_index: usize) -> World{
         World{
             width: width,
-            snake: Snake::new(start_index)
+            snake: Snake::new(start_index),
+            reward_cell: get_random(width - 1) 
         }
     }
 
@@ -61,8 +79,27 @@ impl World{
         self.snake.change_direction(direction);
     }
 
+    pub fn get_reward_cell(&self) -> usize{
+        self.reward_cell
+    }
+
     pub fn update(&mut self){
-        self.snake.update(self.width());
+        let status = self.snake.update(self.width(), self.reward_cell);
+
+        match status {
+            SnakeUpdateState::Grown => self.generate_reward_cell(),
+            SnakeUpdateState::Same => return
+        }
+    }
+
+    fn generate_reward_cell(&mut self){
+        let mut new_index = get_random(self.width - 1);
+
+        while self.snake.index_taken(new_index) {
+            new_index = get_random(self.width - 1);
+        }
+
+        self.reward_cell = new_index;
     }
 }
 
@@ -113,7 +150,19 @@ impl Snake{
         return true;
     }
 
-    fn update(&mut self, width: usize){
+    fn grow(&mut self) {
+        let last_cell = self.body[ self.body.len() - 1].0;
+        self.body.push(Cell(last_cell));
+    }
+
+    fn update(&mut self, width: usize, reward_cell: usize) -> SnakeUpdateState{
+        let mut snake_update_state = SnakeUpdateState::Same;
+
+        if reward_cell == self.get_head(){
+            self.grow();
+            snake_update_state = SnakeUpdateState::Grown;
+        }
+
         match self.direction {
             Direction::Right => self.move_right(width),
             Direction::Down => self.move_down(width),
@@ -122,6 +171,7 @@ impl Snake{
         }
 
         self.direction_change = DirectionChange::Empty;
+        snake_update_state
     }
 
     fn move_right(&mut self, width: usize){
@@ -180,5 +230,15 @@ impl Snake{
         for i in (1..self.body.len()).rev() {
             self.body[i].0 = self.body[i-1].0;
         }
+    }
+
+    fn index_taken(&self, index: usize) -> bool{
+        for i in &self.body{
+            if i.0 == index{
+                return true;
+            }
+        }
+
+        return false;
     }
 }
